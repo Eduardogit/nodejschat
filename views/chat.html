@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chatsito</title>
+  
+  <!--<link rel="stylesheet" href="css/normalize.css">-->
+  <!--<link rel="stylesheet" href="css/foundation.min.css">-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.0/js/bootstrap.js"></script>
+  <style>
+  *{
+  	padding: 0;
+  	margin: 0;
+  }
+  	#new-msg{
+  		width: 100%;
+  	}
+  	header{
+  		margin-top: -1em;
+  		background: rgb(120, 107, 209) none repeat scroll 0% 0%;
+  		color: #fff;
+  	}
+	#list-msgs{
+		height: 300px;
+		width: 100%;
+		background: #ccc;
+		overflow-y: scroll;
+	}
+	.mensaje{
+		margin-top: 20px;
+		margin-bottom: 20px;
+		margin-left: 20px;
+    margin-right: 20px;
+		list-style: none;
+		border-radius: 10px;
+		width: auto;
+		height: auto;
+		background: #fff;
+		color: #000;
+		font-size: 15px;
+		padding: 15px;
+    word-wrap: break-word 
+	}
+  .mensaje>p{
+  color:  rgb(77, 195, 145);
+  font-weight: 900;
+  font-size: 12px;
+  }
+  #online-userslist > li {
+    list-style: none;
+    padding-left: 50px;
+    font-size: 20px;
+}
+#current-user
+{
+  color: #fff;
+  font-size: 20px;
+}
+.emoji {
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    margin-bottom: -0.25em;
+}
+  </style>
+<body>
+<header class="text-center">
+	<h1>Chatsito</h1>
+	<p>Tu usuario es:</p>
+	<p id="current-user" class="text-primary"></p>
+</header>
+<div class="col-md-6">
+	<ul id="list-msgs">   
+	</ul>
+	<textarea id="new-msg" width="100%" rows="2" placeholder="Escribir Mensaje"></textarea>	
+</div>
+<div class="col-md-6">
+	
+
+<div class="panel panel-default">
+	<div class="panel-body">
+	  <h3 class="text-center text-primary">Usuarios Conectados:</h3>
+		<button id="login" type="button" class="btn btn-primary " data-toggle="modal" data-target="#myModal">
+		  login
+		</button>
+  		<ul id="online-userslist"></ul>
+	</div>
+</div>
+  
+</div>
+
+
+
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="reg" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+        <!-- Modal dialog for login -->
+        <div class="form-group">
+         <form id="signup-form">
+          <label for="username">Username</label><br>
+          <input class="form-control" id="username" name="username" placeholder="selecciona un nombre de usuario" required>
+          
+          <br><br><label for="password">Password</label><br>
+          <input class="form-control" id="password" name="password" placeholder="Escribe una contraseña" type="password" required>
+          
+          <br><br><label for="email">Correo</label><br>
+          <input class="form-control" id="email" name="email" placeholder="Ingresa un E-mail" type="email" required>
+          
+      </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="signup()"  data-dismiss="modal" type="button">Registrate</button>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+      	<form id="login-form">
+        <div class="form-group">
+            
+          <label for="username">Username:</label>
+          <input class="form-control" name="username" type="text" placeholder="Username" required >
+          
+          <br><label>Password:</label>
+          <input class="form-control" name="password" type="password" placeholder="Password" required >
+          
+        </div>
+        <button data-dismiss="modal" id="reg" type="button" class="btn btn-primary " data-toggle="modal" data-target="#reg">
+              Registrate
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="login()" data-dismiss="modal" type="button">Login</button>
+    	    </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <!--<script src="js/foundation.min.js"></script>-->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+
+
+
+
+  /*===============EMOJIS =========================*/
+
+    /**
+     * Esta funcion se ejecuta al hacer clic en el boton 'Signup'
+     * registra mediante ajax al nuevo usuario
+     */
+    function signup() {
+      $.ajax({
+        type: "POST",
+        url: '/signup',
+        data: $('#signup-form').serialize(),
+        success: function (data) {
+          $('#msg').empty();
+          if (data.error) {
+            $('#msg').append(data.err.msg);
+          }
+          else {
+            $('#msg').append('User registered successfully');
+            $('#signup-form')[0].reset();
+            window.location = '/';
+          }
+        },
+        dataType: 'json'
+      });
+    }
+    
+
+    var user = {};
+    function login() {
+      $.ajax({
+        type: "POST",
+        url: '/login',
+        data: $('#login-form').serialize(),
+        success: function (data) {
+          $('#alerts').empty();
+          if (data.error) {
+            var html = '<div data-alert class="alert-box alert round">'
+                       + data.err.msg + '</div>';
+            $('#alerts').append(html);
+          }
+          else {
+            user = data.user;
+            userGlobal = user._id
+            var socket = new io();
+            configureSocket(socket);
+            console.log(userGlobal+"==============");
+            $('#current-user').text(userGlobal)
+         
+          }
+        },
+        dataType: 'json'
+      });
+    }
+    var userGlobal
+    $('#current-user').text(userGlobal)
+    function configureSocket(socket) {
+      
+      /**
+       * Cuando el servidor envia la lista de usuarios conectados.
+       * se reciben a través de este evento,
+       * cada usuario se agrega a la lista de usuarios online
+       * @param  {[type]} users Array con usuarios conectados en el momento
+       */
+      socket.on('all online users', function (users) {
+        
+        console.log(users.length + ' users received');
+        for (var i=0; i<users.length; i++) 
+        {
+          var htmluser = '<li id="' + users[i]._id + '">' + users[i]._id + '</li>';
+          $('#online-userslist').append(htmluser);
+        }
+      });
+      
+      /**
+       * Listener para el evento 'chat message'
+       *   Notese que es el mismo evento que se envia 
+       *   desde el servidor.
+       * Agregamos el mensage entrante a la lista.
+       */
+      socket.on('chat message', function (msg) {
+        var usuario = document.createElement('p');
+        var usuText = document.createTextNode(msg.username);
+        var msj = document.createTextNode(msg.mensaje);
+        usuario.appendChild(usuText);
+        var mensaje = document.createElement('li');
+        mensaje.setAttribute('class','mensaje');
+        mensaje.appendChild(usuario);
+        mensaje.appendChild(msj)
+        $('#list-msgs').append( mensaje);
+        $('#list-msgs').scrollTop(1000000000);
+      });
+     
+      /**
+       * Listener para evento 'new user', el servidor lo emite
+       * cuando un usuario se ha conectado
+       * @param  {[json]} nuser el usuario recien conectado
+       */
+      socket.on('new user', function (nuser) {
+        var linuser = '<li id="' + nuser._id + '">'+ nuser._id + '</li>';
+        $('#online-userslist').append(linuser);
+      });
+      
+      /**
+       * Cada vez que un usuario se desconecta, debemos eliminarlo
+       * de la lista de usuarios conectados, el servidor envia un mensaje
+       * con este evento para informarnos sobre un usuario desconectado.
+       * @param  {[json]} nuser El usuarios que se acaba de desconectar
+       */
+      socket.on('remove user', function (nuser) {
+        $('#' + nuser._id).remove();
+      })
+      
+      /**
+       * Emitimos un evento de tipo 'chat message' cada vez
+       * que se presiona 'Enter' en el textarea y enviamos
+       * su contenido como mensaje al servidor.
+       */
+      $('#new-msg').keyup(function (evt) {
+        if (evt.keyCode === 13) {
+        	var msg = {
+        		username: user._id,
+        		mensaje:  $('#new-msg').val()
+        	}
+
+          socket.emit('chat message', msg);
+          $('#new-msg').val('');
+        }
+      });
+      
+      /**
+       * Solicitamos al servidor la lista de usuarios conectados
+       * en este momento.
+       */
+      socket.emit('all online users');
+      
+      /**
+       * Emitimos el evento 'new user' para que el servidor
+       * informe a todos los usuarios que estamos en linea.
+       */
+      socket.emit('new user', user);
+      
+    }
+    
+  </script>
+</body>
+</html>
